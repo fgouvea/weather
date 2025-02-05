@@ -6,7 +6,7 @@ type InMemoryUserRepository struct {
 	users map[string]*user.User
 }
 
-func NewMockRepository() *InMemoryUserRepository {
+func NewInMemoryRTepository() *InMemoryUserRepository {
 	return &InMemoryUserRepository{users: map[string]*user.User{}}
 }
 
