@@ -6,7 +6,7 @@ import (
 	"go.uber.org/zap"
 )
 
-func buildLogger() *zap.SugaredLogger {
+func buildLogger() *zap.Logger {
 	config := zap.NewProductionConfig()
 	config.OutputPaths = []string{"stdout"}
 	logger, err := config.Build()
@@ -15,12 +15,13 @@ func buildLogger() *zap.SugaredLogger {
 		panic(fmt.Errorf("error creating logger: %w", err))
 	}
 
-	return logger.Sugar()
+	return logger
 }
 
 func main() {
 	logger := buildLogger()
 	defer logger.Sync()
 
-	logger.Infow("application started", "host", "localhost")
+	logger.Info("application started", zap.String("host", "localhost"))
+
 }
