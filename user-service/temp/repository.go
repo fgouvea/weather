@@ -18,7 +18,7 @@ func (r *InMemoryUserRepository) Find(id string) (*user.User, error) {
 		return user, nil
 	}
 
-	return nil, user.UserNotFound
+	return nil, user.ErrUserNotFound
 }
 
 func (r *InMemoryUserRepository) Save(user *user.User) error {
