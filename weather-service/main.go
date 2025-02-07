@@ -51,6 +51,21 @@ func main() {
 		fmt.Println(city.Name)
 		fmt.Println(city.State)
 	}
+
+	fmt.Println()
+
+	forecast, err := cptecClient.GetForecast(city.ID)
+
+	if err != nil {
+		fmt.Printf("%s\n", err.Error())
+	} else {
+		for _, f := range forecast.Forecast {
+			fmt.Println(f.Date)
+			fmt.Println(f.Weather)
+			fmt.Printf("%d - %d\n", f.MinTemperature, f.MaxTemperature)
+			fmt.Println()
+		}
+	}
 }
 
 func buildHttpClient() *http.Client {
