@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/fgouvea/weather/user-service/user"
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
 
@@ -28,10 +28,12 @@ func (h *UserHandler) FindUser(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if errors.Is(err, user.ErrUserNotFound) {
+			h.Logger.Info("user not found", zap.String("userID", userID))
 			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 
+		h.Logger.Error("error finding user", zap.String("userID", userID), zap.String("error", err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -39,10 +41,12 @@ func (h *UserHandler) FindUser(w http.ResponseWriter, r *http.Request) {
 	responseBody, err := json.Marshal(buildUserTO(result))
 
 	if err != nil {
+		h.Logger.Error("error writing find response", zap.String("userID", userID), zap.String("error", err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
+	h.Logger.Info("user found", zap.String("userID", userID), zap.String("userName", result.Name))
 	w.Write([]byte(responseBody))
 }
 
@@ -51,6 +55,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	err := json.NewDecoder(r.Body).Decode(&body)
 
 	if err != nil {
+		h.Logger.Error("error reading create body", zap.String("error", err.Error()))
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -58,6 +63,7 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	result, err := h.Service.Create(body.Name, body.WebNotificationID)
 
 	if err != nil {
+		h.Logger.Error("error creating user", zap.String("userName", body.Name), zap.String("error", err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -65,9 +71,11 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	responseBody, err := json.Marshal(buildUserTO(result))
 
 	if err != nil {
+		h.Logger.Error("error writing create response", zap.String("userID", result.Id), zap.String("error", err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
+	h.Logger.Info("user created", zap.String("userID", result.Id), zap.String("userName", result.Name))
 	w.Write([]byte(responseBody))
 }

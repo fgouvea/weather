@@ -1,11 +1,11 @@
-FROM golang:1.23.5
+FROM golang:1.23.5-alpine as builder
+RUN apk add build-base
 
 WORKDIR /app
+ADD . /app
+RUN go build -o /user-service
 
-COPY go.mod go.sum ./
-RUN go mod download
-
-COPY *.go ./
-RUN CGO_ENABLED=0 GOOS=linux go build -o /user-service
-
-CMD ["/user-service"]
+FROM alpine:3.18
+COPY --from=builder /user-service /
+EXPOSE 8080
+CMD [ "/user-service" ]
