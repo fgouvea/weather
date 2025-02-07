@@ -7,7 +7,7 @@ import (
 	"github.com/fgouvea/weather/user-service/api"
 	"github.com/fgouvea/weather/user-service/temp"
 	"github.com/fgouvea/weather/user-service/user"
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
 
