@@ -1,0 +1,9 @@
+version: '2'
+
+services:
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    ports:
+      - 8080:8080
