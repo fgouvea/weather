@@ -13,5 +13,5 @@ type NotificationConfigTO struct {
 
 type WebNotificationConfigTO struct {
 	Enabled bool   `json:"enabled"`
-	Id      string `json:"id"`
+	ID      string `json:"id"`
 }

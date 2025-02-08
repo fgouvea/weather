@@ -56,5 +56,12 @@ func (c *Client) FindUser(id string) (User, error) {
 	return User{
 		ID:   parsedResponse.ID,
 		Name: parsedResponse.Name,
+		NotificationConfig: NotificationConfig{
+			Enabled: parsedResponse.NotificationConfig.Enabled,
+			Web: WebNotificationConfig{
+				Enabled: parsedResponse.NotificationConfig.Web.Enabled,
+				ID:      parsedResponse.NotificationConfig.Web.ID,
+			},
+		},
 	}, nil
 }

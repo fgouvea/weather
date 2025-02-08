@@ -7,7 +7,9 @@ import (
 	"time"
 
 	"github.com/fgouvea/weather/notification-service/api"
+	"github.com/fgouvea/weather/notification-service/notification"
 	"github.com/fgouvea/weather/notification-service/user"
+	"github.com/fgouvea/weather/notification-service/web"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
@@ -40,9 +42,16 @@ func main() {
 
 	// Clients
 
-	_ = user.NewClient(buildHttpClient(), config.UserServiceHost)
+	userClient := user.NewClient(buildHttpClient(), config.UserServiceHost)
+	webNotificationClient := web.NewClient(buildHttpClient(), config.WebNotificationAPIHost)
 
 	// Services
+
+	senders := map[string]notification.Sender{
+		"web": webNotificationClient,
+	}
+
+	_ = notification.NewService(userClient, senders, logger)
 
 	// API
 
