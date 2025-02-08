@@ -13,18 +13,20 @@ import (
 )
 
 type AppConfig struct {
-	Port              string
-	UserServiceHost   string
-	RabbitHost        string
-	NotificationQueue string
+	Port                   string
+	UserServiceHost        string
+	WebNotificationAPIHost string
+	RabbitHost             string
+	NotificationQueue      string
 }
 
 func readConfigFromEnv() AppConfig {
 	return AppConfig{
-		Port:              fmt.Sprintf(":%s", readFromEnv("PORT", "8082")),
-		UserServiceHost:   readFromEnv("USER_SERVICE_HOST", "http://localhost:8080"),
-		RabbitHost:        readFromEnv("RABBIT_HOST", "amqp://guest:guest@localhost:5672/"),
-		NotificationQueue: readFromEnv("NOTIFICATION_QUEUE", "notifications"),
+		Port:                   fmt.Sprintf(":%s", readFromEnv("PORT", "8082")),
+		UserServiceHost:        readFromEnv("USER_SERVICE_HOST", "http://localhost:8080"),
+		WebNotificationAPIHost: readFromEnv("WEB_NOTIFICATION_API_HOST", "http://localhost:8083"),
+		RabbitHost:             readFromEnv("RABBIT_HOST", "amqp://guest:guest@localhost:5672/"),
+		NotificationQueue:      readFromEnv("NOTIFICATION_QUEUE", "notifications"),
 	}
 }
 
