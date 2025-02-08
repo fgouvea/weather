@@ -60,11 +60,11 @@ func (s *Service) Process(notification Notification) error {
 		}
 
 		if err != nil {
-			s.Logger.Error("failed to send", zap.String("sender", senderName), zap.Error(err))
+			s.Logger.Error("failed to send", zap.String("sender", senderName), zap.String("userID", recipient.ID), zap.Error(err))
 			continue
 		}
 
-		s.Logger.Info("notification sent", zap.String("sender", senderName))
+		s.Logger.Info("notification sent", zap.String("sender", senderName), zap.String("userID", recipient.ID))
 	}
 
 	return nil

@@ -4,10 +4,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/fgouvea/weather/notification-service/api"
 	"github.com/fgouvea/weather/notification-service/notification"
+	"github.com/fgouvea/weather/notification-service/queue"
 	"github.com/fgouvea/weather/notification-service/user"
 	"github.com/fgouvea/weather/notification-service/web"
 	"github.com/go-chi/chi/v5"
@@ -20,15 +22,23 @@ type AppConfig struct {
 	WebNotificationAPIHost string
 	RabbitHost             string
 	NotificationQueue      string
+	Consumers              int
 }
 
 func readConfigFromEnv() AppConfig {
+	consumers, err := strconv.Atoi(readFromEnv("CONSUMERS", "1"))
+
+	if err != nil {
+		panic("number of consumers must be integer")
+	}
+
 	return AppConfig{
 		Port:                   fmt.Sprintf(":%s", readFromEnv("PORT", "8082")),
 		UserServiceHost:        readFromEnv("USER_SERVICE_HOST", "http://localhost:8080"),
 		WebNotificationAPIHost: readFromEnv("WEB_NOTIFICATION_API_HOST", "http://localhost:8083"),
 		RabbitHost:             readFromEnv("RABBIT_HOST", "amqp://guest:guest@localhost:5672/"),
 		NotificationQueue:      readFromEnv("NOTIFICATION_QUEUE", "notifications"),
+		Consumers:              consumers,
 	}
 }
 
@@ -37,8 +47,6 @@ func main() {
 	defer logger.Sync()
 
 	config := readConfigFromEnv()
-
-	// Message broker
 
 	// Clients
 
@@ -51,7 +59,15 @@ func main() {
 		"web": webNotificationClient,
 	}
 
-	_ = notification.NewService(userClient, senders, logger)
+	notificationService := notification.NewService(userClient, senders, logger)
+
+	// Queue consumers
+
+	notificationConsumer, err := queue.NewConsumer(config.RabbitHost, config.NotificationQueue, config.Consumers, notificationService, logger)
+
+	if err != nil {
+		panic(fmt.Sprintf("could not create notification consumer: %s", err.Error()))
+	}
 
 	// API
 
@@ -60,6 +76,10 @@ func main() {
 	r.Route("/notification-service", func(r chi.Router) {
 		r.Get("/health", api.Health)
 	})
+
+	// Start consumers
+
+	notificationConsumer.Start()
 
 	logger.Info("application started", zap.Any("config", config))
 	defer logger.Info("application shutdown")
