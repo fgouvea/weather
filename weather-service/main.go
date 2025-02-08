@@ -38,22 +38,22 @@ func main() {
 
 	weatherService := weather.NewService(userClient, cptecClient, cptecClient, cptecClient, &temp.TempNotifier{})
 
+	weatherHandler := &api.WeatherHandler{
+		Notifier: weatherService,
+		Logger:   logger,
+	}
+
 	r := chi.NewRouter()
 
 	r.Route("/weather-service", func(r chi.Router) {
 		r.Get("/health", api.Health)
+		r.Post("/notify", weatherHandler.NotifyUser)
 	})
 
 	logger.Info("application started", zap.String("port", port))
 	defer logger.Info("application shutdown")
 
-	// http.ListenAndServe(port, r)
-
-	err := weatherService.NotifyUser("USER-55b6f92b-52e8-4758-9a52-89d46d2e2aba", "rio de janeiro")
-
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+	http.ListenAndServe(port, r)
 }
 
 func buildHttpClient() *http.Client {
