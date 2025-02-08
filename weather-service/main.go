@@ -8,7 +8,7 @@ import (
 
 	"github.com/fgouvea/weather/weather-service/api"
 	"github.com/fgouvea/weather/weather-service/cptec"
-	"github.com/fgouvea/weather/weather-service/temp"
+	"github.com/fgouvea/weather/weather-service/notification"
 	"github.com/fgouvea/weather/weather-service/user"
 	"github.com/fgouvea/weather/weather-service/weather"
 	"github.com/go-chi/chi/v5"
@@ -16,16 +16,20 @@ import (
 )
 
 type AppConfig struct {
-	Port             string
-	UserServiceHost  string
-	CPTECServiceHost string
+	Port              string
+	UserServiceHost   string
+	CPTECServiceHost  string
+	RabbitHost        string
+	NotificationQueue string
 }
 
 func readConfigFromEnv() AppConfig {
 	return AppConfig{
-		Port:             fmt.Sprintf(":%s", readFromEnv("PORT", "8080")),
-		UserServiceHost:  readFromEnv("USER_SERVICE_HOST", "http://localhost:8080"),
-		CPTECServiceHost: readFromEnv("CPTEC_HOST", "http://servicos.cptec.inpe.br"),
+		Port:              fmt.Sprintf(":%s", readFromEnv("PORT", "8081")),
+		UserServiceHost:   readFromEnv("USER_SERVICE_HOST", "http://localhost:8080"),
+		CPTECServiceHost:  readFromEnv("CPTEC_HOST", "http://servicos.cptec.inpe.br"),
+		RabbitHost:        readFromEnv("RABBIT_HOST", "amqp://guest:guest@localhost:5672/"),
+		NotificationQueue: readFromEnv("NOTIFICATION_QUEUE", "notifications"),
 	}
 }
 
@@ -35,10 +39,26 @@ func main() {
 
 	config := readConfigFromEnv()
 
+	// Message broker
+
+	notificationPublisher, err := notification.NewPublisher(config.RabbitHost, config.NotificationQueue)
+
+	if err != nil {
+		panic(fmt.Sprintf("failed do initialize message publisher: %s", err.Error()))
+	}
+
+	defer notificationPublisher.Close()
+
+	// Clients
+
 	cptecClient := cptec.NewClient(buildHttpClient(), config.CPTECServiceHost)
 	userClient := user.NewClient(buildHttpClient(), config.UserServiceHost)
 
-	weatherService := weather.NewService(userClient, cptecClient, cptecClient, cptecClient, &temp.TempNotifier{})
+	// Services
+
+	weatherService := weather.NewService(userClient, cptecClient, cptecClient, cptecClient, notificationPublisher)
+
+	// API
 
 	weatherHandler := &api.WeatherHandler{
 		Notifier: weatherService,
