@@ -40,9 +40,20 @@ func TestClient_Find(t *testing.T) {
 		{
 			name:              "api returns multiple cities",
 			cptecResponseCode: 200,
-			cptecResponse:     "<?xml version='1.0' encoding='ISO-8859-1'?><cidades><cidade><nome>Test City</nome><uf>XY</uf><id>123</id></cidade><cidade><nome>Another City</nome><uf>XY</uf><id>456</id></cidade></cidades>",
+			cptecResponse:     "<?xml version='1.0' encoding='ISO-8859-1'?><cidades><cidade><nome>Test City A</nome><uf>XY</uf><id>123</id></cidade><cidade><nome>Test City B</nome><uf>XY</uf><id>456</id></cidade></cidades>",
 			expectedResult:    weather.City{},
 			expectedError:     ErrMultipleCities,
+		},
+		{
+			name:              "exact match among multiple cities",
+			cptecResponseCode: 200,
+			cptecResponse:     "<?xml version='1.0' encoding='ISO-8859-1'?><cidades><cidade><nome>Test City Other</nome><uf>XY</uf><id>456</id></cidade><cidade><nome>Test City</nome><uf>XY</uf><id>123</id></cidade></cidades>",
+			expectedResult: weather.City{
+				ID:    "123",
+				Name:  "Test City",
+				State: "XY",
+			},
+			expectedError: nil,
 		},
 		{
 			name:              "cptec api returns error",

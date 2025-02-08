@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/fgouvea/weather/weather-service/weather"
 	"golang.org/x/net/html/charset"
@@ -51,15 +52,13 @@ func (c *Client) FindCity(name string) (weather.City, error) {
 		return weather.City{}, err
 	}
 
-	if len(parsedResponse.Cities) == 0 {
-		return weather.City{}, ErrCityNotFound
+	parsedCity, err := chooseCity(parsedResponse, name)
+
+	if err != nil {
+		return weather.City{}, err
 	}
 
-	if len(parsedResponse.Cities) > 1 {
-		return weather.City{}, ErrMultipleCities
-	}
-
-	return buildCity(parsedResponse.Cities[0]), nil
+	return buildCity(parsedCity), nil
 }
 
 func (c *Client) GetForecast(id string) (weather.CityForecast, error) {
@@ -131,4 +130,22 @@ func getFromAPI[T any](c *Client, url string, parsedResponse *T) error {
 	}
 
 	return nil
+}
+
+func chooseCity(response CitiesResponseTO, name string) (CityTO, error) {
+	if len(response.Cities) == 0 {
+		return CityTO{}, ErrCityNotFound
+	}
+
+	if len(response.Cities) == 1 {
+		return response.Cities[0], nil
+	}
+
+	for _, city := range response.Cities {
+		if strings.ToLower(city.Name) == strings.ToLower(name) {
+			return city, nil
+		}
+	}
+
+	return CityTO{}, ErrMultipleCities
 }
