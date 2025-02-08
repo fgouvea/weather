@@ -20,8 +20,6 @@ const (
 
 var ErrReadingResponse = errors.New("error reading api response")
 var ErrFetchingResponse = errors.New("error fetching cptec response")
-var ErrCityNotFound = errors.New("city not found")
-var ErrMultipleCities = errors.New("multiple cities found with name")
 
 type Client struct {
 	Client *http.Client
@@ -73,7 +71,7 @@ func (c *Client) GetForecast(id string) (weather.CityForecast, error) {
 	}
 
 	if parsedResponse.Name == "null" {
-		return weather.CityForecast{}, ErrCityNotFound
+		return weather.CityForecast{}, weather.ErrCityNotFound
 	}
 
 	forecast, err := buildCityForecast(parsedResponse)
@@ -97,7 +95,7 @@ func (c *Client) GetWaveForecast(id string) (weather.CityWaveForecast, error) {
 	}
 
 	if parsedResponse.Name == "undefined" {
-		return weather.CityWaveForecast{}, ErrCityNotFound
+		return weather.CityWaveForecast{}, weather.ErrCityNotFound
 	}
 
 	forecast, err := buildCityWaveForecast(parsedResponse)
@@ -134,7 +132,7 @@ func getFromAPI[T any](c *Client, url string, parsedResponse *T) error {
 
 func chooseCity(response CitiesResponseTO, name string) (CityTO, error) {
 	if len(response.Cities) == 0 {
-		return CityTO{}, ErrCityNotFound
+		return CityTO{}, weather.ErrCityNotFound
 	}
 
 	if len(response.Cities) == 1 {
@@ -147,5 +145,5 @@ func chooseCity(response CitiesResponseTO, name string) (CityTO, error) {
 		}
 	}
 
-	return CityTO{}, ErrMultipleCities
+	return CityTO{}, weather.ErrMultipleCities
 }

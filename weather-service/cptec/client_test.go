@@ -35,14 +35,14 @@ func TestClient_Find(t *testing.T) {
 			cptecResponseCode: 200,
 			cptecResponse:     "<?xml version='1.0' encoding='ISO-8859-1'?><cidades></cidades>",
 			expectedResult:    weather.City{},
-			expectedError:     ErrCityNotFound,
+			expectedError:     weather.ErrCityNotFound,
 		},
 		{
 			name:              "api returns multiple cities",
 			cptecResponseCode: 200,
 			cptecResponse:     "<?xml version='1.0' encoding='ISO-8859-1'?><cidades><cidade><nome>Test City A</nome><uf>XY</uf><id>123</id></cidade><cidade><nome>Test City B</nome><uf>XY</uf><id>456</id></cidade></cidades>",
 			expectedResult:    weather.City{},
-			expectedError:     ErrMultipleCities,
+			expectedError:     weather.ErrMultipleCities,
 		},
 		{
 			name:              "exact match among multiple cities",
@@ -143,7 +143,7 @@ func TestClient_GetForecast(t *testing.T) {
 			cptecResponseCode: 200,
 			cptecResponse:     "<?xml version='1.0' encoding='ISO-8859-1'?><cidade><nome>null</nome><uf>null</uf><atualizacao>null</atualizacao><previsao><dia>null</dia><tempo>null</tempo><maxima>null</maxima><minima>null</minima><iuv>0.0</iuv></previsao><previsao><dia>null</dia><tempo>null</tempo><maxima>null</maxima><minima>null</minima><iuv>0.0</iuv></previsao><previsao><dia>null</dia><tempo>null</tempo><maxima>null</maxima><minima>null</minima><iuv>0.0</iuv></previsao><previsao><dia>null</dia><tempo>null</tempo><maxima>null</maxima><minima>null</minima><iuv>0.0</iuv></previsao></cidade>",
 			expectedResult:    weather.CityForecast{},
-			expectedError:     ErrCityNotFound,
+			expectedError:     weather.ErrCityNotFound,
 		},
 		{
 			name:              "cptec api returns error",
@@ -225,7 +225,7 @@ func TestClient_GetWaveForecast(t *testing.T) {
 			cptecResponseCode: 200,
 			cptecResponse:     "<?xml version='1.0' encoding='ISO-8859-1'?><cidade><nome>undefined</nome><uf>undefined</uf><atualizacao>00/00/0000 00:00:00</atualizacao><manha><dia>00/00/0000 00:00:00</dia><agitacao>undefined</agitacao><altura>undefined</altura><direcao>undefined</direcao><vento>undefined</vento><vento_dir>undefined</vento_dir></manha><tarde><dia>00/00/0000 00:00:00</dia><agitacao>undefined</agitacao><altura>undefined</altura><direcao>undefined</direcao><vento>undefined</vento><vento_dir>undefined</vento_dir></tarde><noite><dia>00/00/0000 00:00:00</dia><agitacao>undefined</agitacao><altura>undefined</altura><direcao>undefined</direcao><vento>undefined</vento><vento_dir>undefined</vento_dir></noite></cidade>",
 			expectedResult:    weather.CityWaveForecast{},
-			expectedError:     ErrCityNotFound,
+			expectedError:     weather.ErrCityNotFound,
 		},
 		{
 			name:              "cptec api returns error",

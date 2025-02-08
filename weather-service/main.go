@@ -7,6 +7,7 @@ import (
 
 	"github.com/fgouvea/weather/weather-service/api"
 	"github.com/fgouvea/weather/weather-service/cptec"
+	"github.com/fgouvea/weather/weather-service/temp"
 	"github.com/fgouvea/weather/weather-service/weather"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
@@ -32,6 +33,8 @@ func main() {
 
 	cptecClient := cptec.NewClient(buildHttpClient(), "http://servicos.cptec.inpe.br")
 
+	weatherService := weather.NewService(&temp.TempUserClient{}, cptecClient, cptecClient, cptecClient, &temp.TempNotifier{})
+
 	r := chi.NewRouter()
 
 	r.Route("/weather-service", func(r chi.Router) {
@@ -43,43 +46,10 @@ func main() {
 
 	// http.ListenAndServe(port, r)
 
-	city, err := cptecClient.FindCity("santos")
+	err := weatherService.NotifyUser("USER-123456", "rio de janeiro")
 
 	if err != nil {
-		fmt.Printf("%s\n", err.Error())
-	} else {
-		fmt.Println(city.ID)
-		fmt.Println(city.Name)
-		fmt.Println(city.State)
-	}
-
-	fmt.Println()
-
-	forecast, err := cptecClient.GetForecast(city.ID)
-
-	if err != nil {
-		fmt.Printf("%s\n", err.Error())
-	} else {
-		for _, f := range forecast.Forecast {
-			fmt.Println(f.Date)
-			fmt.Println(f.Weather)
-			fmt.Printf("%d - %d\n", f.MinTemperature, f.MaxTemperature)
-			fmt.Println()
-		}
-	}
-
-	waveForecast, err := cptecClient.GetWaveForecast(city.ID)
-
-	if err != nil {
-		if err == cptec.ErrCityNotFound {
-			fmt.Println("Cidade não litorânea")
-		} else {
-			fmt.Printf("%s\n", err.Error())
-		}
-	} else {
-		printWaveForecast(waveForecast.Morning, waveForecast.Date, "Manhã")
-		printWaveForecast(waveForecast.Afternoon, waveForecast.Date, "Tarde")
-		printWaveForecast(waveForecast.Evening, waveForecast.Date, "Noite")
+		fmt.Println(err.Error())
 	}
 }
 
