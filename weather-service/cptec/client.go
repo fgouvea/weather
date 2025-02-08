@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"strconv"
 
 	"github.com/fgouvea/weather/weather-service/weather"
 	"golang.org/x/net/html/charset"
@@ -15,6 +14,7 @@ import (
 const (
 	getCitiesURL  = "/XML/listaCidades?city=%s"
 	getWeatherURL = "/XML/cidade/%s/previsao.xml"
+	getWaveURL    = "/XML/cidade/%s/dia/%d/ondas.xml"
 )
 
 var ErrReadingResponse = errors.New("error reading api response")
@@ -25,21 +25,23 @@ var ErrMultipleCities = errors.New("multiple cities found with name")
 type Client struct {
 	Client *http.Client
 
-	getCitiesUrl  string
-	getWeatherUrl string
+	getCitiesURL  string
+	getWeatherURL string
+	getWaveURL    string
 }
 
 func NewClient(httpClient *http.Client, basePath string) *Client {
 	return &Client{
 		Client: httpClient,
 
-		getCitiesUrl:  fmt.Sprintf("%s%s", basePath, getCitiesURL),
-		getWeatherUrl: fmt.Sprintf("%s%s", basePath, getWeatherURL),
+		getCitiesURL:  fmt.Sprintf("%s%s", basePath, getCitiesURL),
+		getWeatherURL: fmt.Sprintf("%s%s", basePath, getWeatherURL),
+		getWaveURL:    fmt.Sprintf("%s%s", basePath, getWaveURL),
 	}
 }
 
 func (c *Client) FindCity(name string) (weather.City, error) {
-	url := fmt.Sprintf(c.getCitiesUrl, url.QueryEscape(name))
+	url := fmt.Sprintf(c.getCitiesURL, url.QueryEscape(name))
 
 	var parsedResponse CitiesResponseTO
 
@@ -61,7 +63,7 @@ func (c *Client) FindCity(name string) (weather.City, error) {
 }
 
 func (c *Client) GetForecast(id string) (weather.CityForecast, error) {
-	url := fmt.Sprintf(c.getWeatherUrl, id)
+	url := fmt.Sprintf(c.getWeatherURL, id)
 
 	var parsedResponse CityForecastTO
 
@@ -79,6 +81,30 @@ func (c *Client) GetForecast(id string) (weather.CityForecast, error) {
 
 	if err != nil {
 		return weather.CityForecast{}, err
+	}
+
+	return forecast, nil
+}
+
+func (c *Client) GetWaveForecast(id string) (weather.CityWaveForecast, error) {
+	url := fmt.Sprintf(c.getWaveURL, id, 0)
+
+	var parsedResponse CityWaveForecastTO
+
+	err := getFromAPI(c, url, &parsedResponse)
+
+	if err != nil {
+		return weather.CityWaveForecast{}, err
+	}
+
+	if parsedResponse.Name == "undefined" {
+		return weather.CityWaveForecast{}, ErrCityNotFound
+	}
+
+	forecast, err := buildCityWaveForecast(parsedResponse)
+
+	if err != nil {
+		return weather.CityWaveForecast{}, err
 	}
 
 	return forecast, nil
@@ -105,63 +131,4 @@ func getFromAPI[T any](c *Client, url string, parsedResponse *T) error {
 	}
 
 	return nil
-}
-
-func buildCity(to CityTO) weather.City {
-	return weather.City{
-		ID:    to.ID,
-		Name:  to.Name,
-		State: to.State,
-	}
-}
-
-func buildCityForecast(to CityForecastTO) (weather.CityForecast, error) {
-	forecast := make([]weather.Forecast, len(to.Forecast))
-
-	for i, forecastTO := range to.Forecast {
-		parsedForecast, err := buildForecast(forecastTO)
-
-		if err != nil {
-			return weather.CityForecast{}, nil
-		}
-
-		forecast[i] = parsedForecast
-	}
-
-	return weather.CityForecast{
-		Name:     to.Name,
-		State:    to.State,
-		Date:     to.Date,
-		Forecast: forecast,
-	}, nil
-}
-
-func buildForecast(to ForecastTO) (weather.Forecast, error) {
-	min, err := strconv.Atoi(to.MinTemperature)
-	if err != nil {
-		return weather.Forecast{}, fmt.Errorf("failed to read min temp: %s", to.MinTemperature)
-	}
-
-	max, err := strconv.Atoi(to.MaxTemperature)
-	if err != nil {
-		return weather.Forecast{}, fmt.Errorf("failed to read max temp: %s", to.MaxTemperature)
-	}
-
-	iuv, err := strconv.ParseFloat(to.IUV, 32)
-	if err != nil {
-		return weather.Forecast{}, fmt.Errorf("failed to read IUV: %s", to.IUV)
-	}
-
-	fullWeatherName, exists := WeatherName[to.Weather]
-	if !exists {
-		fullWeatherName = UnknownWeather
-	}
-
-	return weather.Forecast{
-		Date:           to.Date,
-		Weather:        fullWeatherName,
-		MinTemperature: min,
-		MaxTemperature: max,
-		IUV:            iuv,
-	}, nil
 }

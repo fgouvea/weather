@@ -7,10 +7,8 @@ type City struct {
 }
 
 type CityForecast struct {
-	Name     string
-	State    string
-	Date     string
-	Forecast []Forecast
+	UpdatedAt string
+	Forecast  []Forecast
 }
 
 type Forecast struct {
@@ -19,4 +17,20 @@ type Forecast struct {
 	MaxTemperature int
 	MinTemperature int
 	IUV            float64
+}
+
+type CityWaveForecast struct {
+	UpdatedAt string
+	Date      string
+	Morning   WaveForecast
+	Afternoon WaveForecast
+	Evening   WaveForecast
+}
+
+type WaveForecast struct {
+	Swell         string
+	Height        float64
+	Wind          float64
+	WaveDirection string
+	WindDirection string
 }

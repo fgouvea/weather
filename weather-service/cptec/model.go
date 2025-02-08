@@ -29,6 +29,25 @@ type ForecastTO struct {
 	IUV            string `xml:"iuv"`
 }
 
+type CityWaveForecastTO struct {
+	XMLName   xml.Name       `xml:"cidade"`
+	Name      string         `xml:"nome"`
+	State     string         `xml:"uf"`
+	UpdatedAt string         `xml:"atualizacao"`
+	Morning   WaveForecastTO `xml:"manha"`
+	Afternoon WaveForecastTO `xml:"tarde"`
+	Evening   WaveForecastTO `xml:"noite"`
+}
+
+type WaveForecastTO struct {
+	Date          string `xml:"dia"`
+	Swell         string `xml:"agitacao"`
+	Height        string `xml:"altura"`
+	Wind          string `xml:"vento"`
+	WaveDirection string `xml:"direcao"`
+	WindDirection string `xml:"vento_dir"`
+}
+
 var WeatherName = map[string]string{
 	"ec":  "Encoberto com Chuvas Isoladas",
 	"ci":  "Chuvas Isoladas",

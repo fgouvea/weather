@@ -7,6 +7,7 @@ import (
 
 	"github.com/fgouvea/weather/weather-service/api"
 	"github.com/fgouvea/weather/weather-service/cptec"
+	"github.com/fgouvea/weather/weather-service/weather"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
@@ -42,7 +43,7 @@ func main() {
 
 	// http.ListenAndServe(port, r)
 
-	city, err := cptecClient.FindCity("volta redonda")
+	city, err := cptecClient.FindCity("santos")
 
 	if err != nil {
 		fmt.Printf("%s\n", err.Error())
@@ -66,6 +67,28 @@ func main() {
 			fmt.Println()
 		}
 	}
+
+	waveForecast, err := cptecClient.GetWaveForecast(city.ID)
+
+	if err != nil {
+		if err == cptec.ErrCityNotFound {
+			fmt.Println("Cidade não litorânea")
+		} else {
+			fmt.Printf("%s\n", err.Error())
+		}
+	} else {
+		printWaveForecast(waveForecast.Morning, waveForecast.Date, "Manhã")
+		printWaveForecast(waveForecast.Afternoon, waveForecast.Date, "Tarde")
+		printWaveForecast(waveForecast.Evening, waveForecast.Date, "Noite")
+	}
+}
+
+func printWaveForecast(f weather.WaveForecast, date, period string) {
+	fmt.Printf("%s: %s\n", period, date)
+	fmt.Printf("Agitação: %s\n", f.Swell)
+	fmt.Printf("Ondas: %fm %s\n", f.Height, f.WaveDirection)
+	fmt.Printf("Vento: %f %s\n", f.Wind, f.WindDirection)
+	fmt.Println()
 }
 
 func buildHttpClient() *http.Client {
