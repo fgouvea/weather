@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/fgouvea/weather/weather-service/api"
@@ -14,27 +15,28 @@ import (
 	"go.uber.org/zap"
 )
 
-func buildLogger() *zap.Logger {
-	config := zap.NewProductionConfig()
-	config.OutputPaths = []string{"stdout"}
-	logger, err := config.Build()
-
-	if err != nil {
-		panic(fmt.Errorf("error creating logger: %w", err))
-	}
-
-	return logger
+type AppConfig struct {
+	Port             string
+	UserServiceHost  string
+	CPTECServiceHost string
 }
 
-const port = ":8081"
+func readConfigFromEnv() AppConfig {
+	return AppConfig{
+		Port:             fmt.Sprintf(":%s", readFromEnv("PORT", "8080")),
+		UserServiceHost:  readFromEnv("USER_SERVICE_HOST", "http://localhost:8080"),
+		CPTECServiceHost: readFromEnv("CPTEC_HOST", "http://servicos.cptec.inpe.br"),
+	}
+}
 
 func main() {
 	logger := buildLogger()
 	defer logger.Sync()
 
-	cptecClient := cptec.NewClient(buildHttpClient(), "http://servicos.cptec.inpe.br")
+	config := readConfigFromEnv()
 
-	userClient := user.NewClient(buildHttpClient(), "http://localhost:8080")
+	cptecClient := cptec.NewClient(buildHttpClient(), config.CPTECServiceHost)
+	userClient := user.NewClient(buildHttpClient(), config.UserServiceHost)
 
 	weatherService := weather.NewService(userClient, cptecClient, cptecClient, cptecClient, &temp.TempNotifier{})
 
@@ -50,10 +52,30 @@ func main() {
 		r.Post("/notify", weatherHandler.NotifyUser)
 	})
 
-	logger.Info("application started", zap.String("port", port))
+	logger.Info("application started", zap.Any("config", config))
 	defer logger.Info("application shutdown")
 
-	http.ListenAndServe(port, r)
+	http.ListenAndServe(config.Port, r)
+}
+
+func readFromEnv(env, def string) string {
+	if value := os.Getenv(env); value != "" {
+		return value
+	}
+
+	return def
+}
+
+func buildLogger() *zap.Logger {
+	config := zap.NewProductionConfig()
+	config.OutputPaths = []string{"stdout"}
+	logger, err := config.Build()
+
+	if err != nil {
+		panic(fmt.Errorf("error creating logger: %w", err))
+	}
+
+	return logger
 }
 
 func buildHttpClient() *http.Client {

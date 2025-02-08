@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"github.com/fgouvea/weather/user-service/api"
 	"github.com/fgouvea/weather/user-service/temp"
@@ -10,6 +11,18 @@ import (
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
+
+type AppConfig struct {
+	Port             string
+	UserServiceHost  string
+	CPTECServiceHost string
+}
+
+func readConfigFromEnv() AppConfig {
+	return AppConfig{
+		Port: fmt.Sprintf(":%s", readFromEnv("PORT", "8080")),
+	}
+}
 
 func buildLogger() *zap.Logger {
 	config := zap.NewProductionConfig()
@@ -23,11 +36,11 @@ func buildLogger() *zap.Logger {
 	return logger
 }
 
-const port = ":8080"
-
 func main() {
 	logger := buildLogger()
 	defer logger.Sync()
+
+	config := readConfigFromEnv()
 
 	repository := temp.NewInMemoryRTepository()
 
@@ -49,8 +62,16 @@ func main() {
 		})
 	})
 
-	logger.Info("application started", zap.String("port", port))
+	logger.Info("application started", zap.Any("config", config))
 	defer logger.Info("application shutdown")
 
-	http.ListenAndServe(port, r)
+	http.ListenAndServe(config.Port, r)
+}
+
+func readFromEnv(env, def string) string {
+	if value := os.Getenv(env); value != "" {
+		return value
+	}
+
+	return def
 }

@@ -5,11 +5,16 @@ services:
     build:
       context: ./user-service
       dockerfile: Dockerfile
+    environment:
+      - PORT=8080
     ports:
       - 8080:8080
   weather-service:
     build:
       context: ./weather-service
       dockerfile: Dockerfile
+    environment:
+      - USER_SERVICE_HOST=http://user-service:8080
+      - PORT=8080
     ports:
       - 8081:8080
