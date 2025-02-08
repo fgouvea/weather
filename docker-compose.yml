@@ -23,6 +23,22 @@ services:
         condition: service_healthy
     links:
       - rabbitmq
+  notification-service:
+    build:
+      context: ./notification-service
+      dockerfile: Dockerfile
+    environment:
+      - PORT=8080
+      - USER_SERVICE_HOST=http://user-service:8080
+      - RABBIT_HOST=amqp://guest:guest@rabbitmq:5672/
+      - NOTIFICATION_QUEUE=notifications
+    ports:
+      - 8082:8080
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    links:
+      - rabbitmq
   rabbitmq:
     image: rabbitmq:4.0-management
     ports:
