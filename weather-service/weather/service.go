@@ -33,25 +33,40 @@ func NewService(
 	}
 }
 
-func (s *Service) NotifyUser(userID, cityName string) error {
+func (s *Service) getUserAndCity(userID, cityName string) (user.User, City, error) {
 	userEntry, err := s.UserFinder.FindUser(userID)
 
 	if err != nil {
 		if errors.Is(err, user.ErrUserNotFound) {
-			return err
+			return user.User{}, City{}, err
 		}
 
-		return fmt.Errorf("unexpected error fetching user: %w", err)
+		return user.User{}, City{}, fmt.Errorf("unexpected error fetching user: %w", err)
 	}
 
 	city, err := s.CityFinder.FindCity(cityName)
 
 	if err != nil {
 		if errors.Is(err, ErrCityNotFound) || errors.Is(err, ErrMultipleCities) {
-			return err
+			return user.User{}, City{}, err
 		}
 
-		return fmt.Errorf("unexpected error fetching city: %w", err)
+		return user.User{}, City{}, fmt.Errorf("unexpected error fetching city: %w", err)
+	}
+
+	return userEntry, city, nil
+}
+
+func (s *Service) Validate(userID, cityName string) error {
+	_, _, err := s.getUserAndCity(userID, cityName)
+	return err
+}
+
+func (s *Service) NotifyUser(userID, cityName string) error {
+	userEntry, city, err := s.getUserAndCity(userID, cityName)
+
+	if err != nil {
+		return err
 	}
 
 	weatherForecast, err := s.WeatherForecaster.GetForecast(city.ID)
