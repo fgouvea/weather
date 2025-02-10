@@ -47,10 +47,19 @@ func (j *Job) Start() {
 			j.Logger.Info("running schedule job", zap.Int("schedulesFound", len(schedules)))
 
 			for _, schedule := range schedules {
-				timer := time.NewTimer(schedule.Time.Sub(currentTime))
+				duration := schedule.Time.Sub(currentTime)
+
+				j.Logger.Info("scheduling info",
+					zap.String("scheduleID", schedule.ID),
+					zap.String("scheduledIn", duration.String()),
+					zap.String("currentTime", currentTime.Format(time.RFC3339)),
+					zap.String("scheduleTime", schedule.Time.Format(time.RFC3339)),
+				)
 
 				go func() {
-					_ = <-timer.C
+					time.Sleep(duration)
+
+					j.Logger.Info("processing scheduled info", zap.String("scheduleID", schedule.ID))
 					j.Publisher.Publish(schedule)
 				}()
 			}

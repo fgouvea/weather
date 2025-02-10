@@ -11,7 +11,7 @@ CREATE TABLE weather.Schedules (
   user_id VARCHAR(255),
   city_name VARCHAR(255),
   status VARCHAR(255),
-  time TIMESTAMP
+  time TIMESTAMP WITH TIME ZONE
 );
 
 INSERT INTO weather.Users(id, name, notification_config)
