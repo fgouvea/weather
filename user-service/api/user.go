@@ -83,3 +83,25 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
 	w.Write([]byte(responseBody))
 }
+
+func (h *UserHandler) OutOutOfNotifications(w http.ResponseWriter, r *http.Request) {
+	userID := chi.URLParam(r, "userID")
+
+	err := h.Service.OptOutOfNotifications(userID)
+
+	if err != nil {
+		if errors.Is(err, user.ErrUserNotFound) {
+			h.Logger.Info("user not found", zap.String("userID", userID))
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		h.Logger.Error("error disabling user notifications", zap.String("userID", userID), zap.String("error", err.Error()))
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	h.Logger.Info("disabled notifications for user", zap.String("userID", userID))
+
+	w.WriteHeader(http.StatusOK)
+}

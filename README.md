@@ -97,3 +97,11 @@ web-notification-api-mock-1  | Manhã: Fraco 1.00m
 web-notification-api-mock-1  | Tarde: Fraco 1.00m
 web-notification-api-mock-1  | Noite: Fraco 1.00m
 ```
+
+## Desabilitar notificações
+
+Para desabilitar as notificações para um usuário, chame:
+
+```sh
+curl -X POST --location 'http://localhost:8080/user-service/user/{userID}/optout'
+```

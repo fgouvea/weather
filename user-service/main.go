@@ -69,8 +69,9 @@ func main() {
 		r.Get("/health", api.Health)
 
 		r.Route("/user", func(r chi.Router) {
-			r.Get("/{userID}", handler.FindUser)
 			r.Post("/", handler.CreateUser)
+			r.Get("/{userID}", handler.FindUser)
+			r.Post("/{userID}/optout", handler.OutOutOfNotifications)
 		})
 	})
 
