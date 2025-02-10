@@ -6,21 +6,29 @@ import (
 	"os"
 
 	"github.com/fgouvea/weather/user-service/api"
-	"github.com/fgouvea/weather/user-service/temp"
+	"github.com/fgouvea/weather/user-service/db"
 	"github.com/fgouvea/weather/user-service/user"
 	"github.com/go-chi/chi/v5"
 	"go.uber.org/zap"
 )
 
 type AppConfig struct {
-	Port             string
-	UserServiceHost  string
-	CPTECServiceHost string
+	Port       string
+	DBHost     string
+	DBPort     string
+	DBUser     string
+	DBPassword string
+	DBDatabase string
 }
 
 func readConfigFromEnv() AppConfig {
 	return AppConfig{
-		Port: fmt.Sprintf(":%s", readFromEnv("PORT", "8080")),
+		Port:       fmt.Sprintf(":%s", readFromEnv("PORT", "8080")),
+		DBHost:     readFromEnv("DB_HOST", "localhost"),
+		DBPort:     readFromEnv("DB_PORT", "5432"),
+		DBUser:     readFromEnv("DB_USER", "admin"),
+		DBPassword: readFromEnv("DB_PASSWORD", "admin"),
+		DBDatabase: readFromEnv("DB_DATABASE", "weather"),
 	}
 }
 
@@ -42,7 +50,11 @@ func main() {
 
 	config := readConfigFromEnv()
 
-	repository := temp.NewInMemoryRTepository()
+	repository, err := db.NewUserRepository(config.DBHost, config.DBPort, config.DBUser, config.DBPassword, config.DBDatabase)
+
+	if err != nil {
+		panic(fmt.Sprintf("failed to initialize user repository: %s", err.Error()))
+	}
 
 	service := user.NewService(repository, repository)
 

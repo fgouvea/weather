@@ -9,10 +9,10 @@ import (
 
 	"github.com/fgouvea/weather/weather-service/api"
 	"github.com/fgouvea/weather/weather-service/cptec"
+	"github.com/fgouvea/weather/weather-service/db"
 	"github.com/fgouvea/weather/weather-service/notification"
 	"github.com/fgouvea/weather/weather-service/queue"
 	"github.com/fgouvea/weather/weather-service/schedule"
-	"github.com/fgouvea/weather/weather-service/temp"
 	"github.com/fgouvea/weather/weather-service/user"
 	"github.com/fgouvea/weather/weather-service/weather"
 	"github.com/go-chi/chi/v5"
@@ -28,6 +28,11 @@ type AppConfig struct {
 	ScheduleQueue     string
 	ScheduleConsumers int
 	JobInterval       time.Duration
+	DBHost            string
+	DBPort            string
+	DBUser            string
+	DBPassword        string
+	DBDatabase        string
 }
 
 func readConfigFromEnv() AppConfig {
@@ -52,6 +57,11 @@ func readConfigFromEnv() AppConfig {
 		ScheduleQueue:     readFromEnv("SCHEDULE_QUEUE", "schedules"),
 		ScheduleConsumers: scheduleConsumers,
 		JobInterval:       jobInterval,
+		DBHost:            readFromEnv("DB_HOST", "localhost"),
+		DBPort:            readFromEnv("DB_PORT", "5432"),
+		DBUser:            readFromEnv("DB_USER", "admin"),
+		DBPassword:        readFromEnv("DB_PASSWORD", "admin"),
+		DBDatabase:        readFromEnv("DB_DATABASE", "weather"),
 	}
 }
 
@@ -86,7 +96,7 @@ func main() {
 
 	// Repositories
 
-	scheduleRepository := &temp.InMemoryScheduleRepository{}
+	scheduleRepository, err := db.NewScheduleRepository(config.DBHost, config.DBPort, config.DBUser, config.DBPassword, config.DBDatabase)
 
 	// Services
 

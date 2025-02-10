@@ -85,7 +85,7 @@ func TestUserService_Create_Error(t *testing.T) {
 
 func TestUserService_Find_Success(t *testing.T) {
 	savedUser := User{
-		Id:   "USER-1",
+		ID:   "USER-1",
 		Name: "Fulano Beltrano",
 		NotificationConfig: NotificationConfig{
 			Enabled: true,
@@ -202,7 +202,7 @@ func TestUserService_OptOutOf_Notifications(t *testing.T) {
 
 			if tt.findError == nil {
 				repositoryMock.FindResult = User{
-					Id:   "USER-1",
+					ID:   "USER-1",
 					Name: "Fulano Beltrano",
 					NotificationConfig: NotificationConfig{
 						Enabled: true,

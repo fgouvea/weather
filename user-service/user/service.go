@@ -31,7 +31,7 @@ func NewService(saver Saver, finder Finder) *Service {
 
 func (s *Service) Create(name, webNotificationId string) (*User, error) {
 	user := &User{
-		Id:   "USER-" + uuid.New().String(),
+		ID:   "USER-" + uuid.New().String(),
 		Name: name,
 		NotificationConfig: NotificationConfig{
 			Enabled: true,

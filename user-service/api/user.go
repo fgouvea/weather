@@ -47,6 +47,8 @@ func (h *UserHandler) FindUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.Logger.Info("user found", zap.String("userID", userID), zap.String("userName", result.Name))
+
+	w.Header().Add("Content-Type", "application/json")
 	w.Write([]byte(responseBody))
 }
 
@@ -71,11 +73,13 @@ func (h *UserHandler) CreateUser(w http.ResponseWriter, r *http.Request) {
 	responseBody, err := json.Marshal(buildUserTO(result))
 
 	if err != nil {
-		h.Logger.Error("error writing create response", zap.String("userID", result.Id), zap.String("error", err.Error()))
+		h.Logger.Error("error writing create response", zap.String("userID", result.ID), zap.String("error", err.Error()))
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	h.Logger.Info("user created", zap.String("userID", result.Id), zap.String("userName", result.Name))
+	h.Logger.Info("user created", zap.String("userID", result.ID), zap.String("userName", result.Name))
+
+	w.Header().Add("Content-Type", "application/json")
 	w.Write([]byte(responseBody))
 }

@@ -25,7 +25,7 @@ type WebNotificationConfigTO struct {
 
 func buildUserTO(u *user.User) UserTO {
 	return UserTO{
-		Id:   u.Id,
+		Id:   u.ID,
 		Name: u.Name,
 		NotificationConfig: NotificationConfigTO{
 			Enabled: u.NotificationConfig.Enabled,

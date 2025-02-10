@@ -1,7 +1,7 @@
 package user
 
 type User struct {
-	Id                 string
+	ID                 string
 	Name               string
 	NotificationConfig NotificationConfig
 }
