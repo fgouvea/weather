@@ -16,6 +16,7 @@ var ErrPublish = errors.New("failed to publish message")
 type Notification struct {
 	UserID  string `json:"userId"`
 	Content string `json:"content"`
+	Channel string `json:"channel"`
 }
 
 type Publisher struct {
@@ -61,6 +62,7 @@ func (p *Publisher) Notify(userId, content string) error {
 	notification := Notification{
 		UserID:  userId,
 		Content: content,
+		Channel: "web",
 	}
 
 	body, err := json.Marshal(notification)

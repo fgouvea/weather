@@ -11,11 +11,13 @@ import (
 var (
 	ErrFailedToProcess = errors.New("failed to process notification")
 	ErrUserOptOut      = errors.New("user opted out of receiving notifications")
+	ErrUnknownChannel  = errors.New("unknown channel")
 )
 
 type Notification struct {
 	UserID  string
 	Content string
+	Channel string
 }
 
 type UserFinder interface {
@@ -52,20 +54,25 @@ func (s *Service) Process(notification Notification) error {
 		return nil
 	}
 
-	for senderName, sender := range s.Senders {
-		err = sender.Send(recipient, notification.Content)
+	sender, exists := s.Senders[notification.Channel]
 
-		if !errors.Is(ErrUserOptOut, err) {
-			continue
-		}
-
-		if err != nil {
-			s.Logger.Error("failed to send", zap.String("sender", senderName), zap.String("userID", recipient.ID), zap.Error(err))
-			continue
-		}
-
-		s.Logger.Info("notification sent", zap.String("sender", senderName), zap.String("userID", recipient.ID))
+	if !exists {
+		return fmt.Errorf("%w: %s", ErrUnknownChannel, notification.Channel)
 	}
+
+	err = sender.Send(recipient, notification.Content)
+
+	if errors.Is(ErrUserOptOut, err) {
+		s.Logger.Info("notification skipped", zap.String("sender", notification.Channel), zap.String("userID", recipient.ID))
+		return nil
+	}
+
+	if err != nil {
+		s.Logger.Error("failed to send", zap.String("sender", notification.Channel), zap.String("userID", recipient.ID), zap.Error(err))
+		return fmt.Errorf("%w: %w", ErrFailedToProcess, err)
+	}
+
+	s.Logger.Info("notification sent", zap.String("sender", notification.Channel), zap.String("userID", recipient.ID))
 
 	return nil
 }
